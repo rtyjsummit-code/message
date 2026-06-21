@@ -14,16 +14,14 @@ input.addEventListener("input", () => {
   );
 });
 
-/*
- 렌더링
-*/
 function renderDocument() {
 
   let text = fixText(
     input.value
   );
 
-  let lines = text.split("\n");
+  let lines = text
+    .split("\n");
 
   let html = "";
 
@@ -39,7 +37,7 @@ function renderDocument() {
 
     html += `
       <div class="meta">
-        ${lines[0]}
+        ${lines[0].trim()}
       </div>
     `;
 
@@ -47,7 +45,7 @@ function renderDocument() {
   }
 
   /*
-   빈 줄 제거
+   빈줄 제거
   */
   while (
     index < lines.length &&
@@ -61,7 +59,9 @@ function renderDocument() {
   */
   let titleLines = [];
 
-  while (index < lines.length) {
+  while (
+    index < lines.length
+  ) {
 
     const line =
       lines[index].trim();
@@ -72,7 +72,10 @@ function renderDocument() {
     }
 
     if (
-      isSection(line)
+      line.startsWith("본문") ||
+      line.startsWith("서론") ||
+      line.startsWith("본론") ||
+      line.startsWith("결론")
     ) {
       break;
     }
@@ -89,7 +92,7 @@ function renderDocument() {
   `;
 
   /*
-   본문 파싱
+   본문
   */
   for (
     let i = index;
@@ -100,14 +103,10 @@ function renderDocument() {
     let line =
       lines[i].trim();
 
-    if (!line) {
-      continue;
-    }
+    if (!line) continue;
 
     /*
-      본문 - xxx
-      서론 - xxx
-      결론 - xxx
+     본문
     */
     if (
       line.startsWith("본문")
@@ -120,9 +119,8 @@ function renderDocument() {
       `;
 
       let content =
-        line.replace("본문", "")
-            .replace("-", "")
-            .trim();
+        line
+          .replace(/^본문\s*[-–]?\s*/, "");
 
       if (content) {
 
@@ -136,6 +134,9 @@ function renderDocument() {
       continue;
     }
 
+    /*
+     서론
+    */
     if (
       line.startsWith("서론")
     ) {
@@ -147,9 +148,8 @@ function renderDocument() {
       `;
 
       let content =
-        line.replace("서론", "")
-            .replace("-", "")
-            .trim();
+        line
+          .replace(/^서론\s*[-–]?\s*/, "");
 
       if (content) {
 
@@ -163,6 +163,9 @@ function renderDocument() {
       continue;
     }
 
+    /*
+     본론
+    */
     if (
       line.startsWith("본론")
     ) {
@@ -176,6 +179,9 @@ function renderDocument() {
       continue;
     }
 
+    /*
+     결론
+    */
     if (
       line.startsWith("결론")
     ) {
@@ -187,10 +193,8 @@ function renderDocument() {
       `;
 
       let content =
-        line.replace("결론", "")
-            .replace("–", "")
-            .replace("-", "")
-            .trim();
+        line
+          .replace(/^결론\s*[-–]?\s*/, "");
 
       if (content) {
 
@@ -205,7 +209,7 @@ function renderDocument() {
     }
 
     /*
-      대주제
+     대주제
     */
     if (
       isTopic(line)
@@ -221,10 +225,15 @@ function renderDocument() {
     }
 
     /*
-      (1)(2)(3)
+     세부소주제
+     (1)그리스도 (2)5가지확신
     */
+    const detailMatches =
+      line.match(/\(\d+\)/g);
+
     if (
-      isDetailLine(line)
+      detailMatches &&
+      detailMatches.length >= 2
     ) {
 
       html += `
@@ -237,31 +246,24 @@ function renderDocument() {
     }
 
     /*
-      1)각인 2)뿌리 3)체질
+     소주제
+     1) 확실한 복음
     */
     if (
-  isSubtopic(line)
-)
+      isSubtopic(line)
+    ) {
 
-      const subs =
-        splitSubtopics(line);
-
-      for (
-        const sub of subs
-      ) {
-
-        html += `
-          <div class="subtopic">
-            ${sub}
-          </div>
-        `;
-      }
+      html += `
+        <div class="subtopic">
+          ${line}
+        </div>
+      `;
 
       continue;
     }
 
     /*
-      일반 텍스트
+     일반본문
     */
     html += `
       <div class="body-text">
@@ -278,20 +280,17 @@ function renderDocument() {
 */
 function downloadPDF() {
 
-  let title =
+  const title =
     document
       .querySelector(".title")
       ?.innerText
       ?.split("\n")[0]
-      ?.trim();
-
-  if (!title) {
-    title = "message";
-  }
+      ?.trim()
+    || "message";
 
   const opt = {
     margin: 0,
-    filename: title + ".pdf",
+    filename: `${title}.pdf`,
     image: {
       type: "jpeg",
       quality: 1
@@ -315,4 +314,9 @@ function downloadPDF() {
 /*
  최초 실행
 */
-renderDocument();
+try {
+  renderDocument();
+}
+catch (e) {
+  console.error(e);
+}
