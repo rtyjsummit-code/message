@@ -280,6 +280,8 @@ function renderDocument() {
 */
 function downloadPDF() {
 
+  const paper = document.getElementById("preview");
+
   const title =
     document
       .querySelector(".title")
@@ -296,7 +298,9 @@ function downloadPDF() {
       quality: 1
     },
     html2canvas: {
-      scale: 2
+      scale: 2,
+      useCORS: true,
+      scrollY: 0
     },
     jsPDF: {
       unit: "mm",
